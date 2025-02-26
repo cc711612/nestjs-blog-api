@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { User } from './users.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtService } from '@nestjs/jwt';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -18,33 +21,53 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    const users = await this.userRepository.find();
+    return users.map(user => plainToClass(User, user));
   }
 
-  async findOne(id: number): Promise<User> {  // 將 id 類型設置為 number
+  async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOne({ 
       where: { id }, 
-      relations: ['articles', 'comments'],  // 關聯 articles, comments
+      relations: ['articles', 'comments'],
     });
     if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    return user;
+    return plainToClass(User, user);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {  // 將 id 類型設置為 number
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     await this.userRepository.update(id, updateUserDto);
     const updatedUser = await this.userRepository.findOne({ where: { id } });
     if (!updatedUser) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    return updatedUser;
+    return plainToClass(User, updatedUser);
   }
 
-  async remove(id: number): Promise<void> {  // 將 id 類型設置為 number
-    const result = await this.userRepository.delete(id);
-    if (result.affected === 0) {
+  async remove(id: number): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
+    await this.userRepository.softRemove(user);
+  }
+
+  async restore(id: number): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id }, withDeleted: true });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    await this.userRepository.restore(user.id);
+  }
+
+  async getToken(id: number): Promise<{ user: User, jwtToken: string }> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    const payload = { username: user.name, sub: user.id };
+    const jwtToken = this.jwtService.sign(payload);
+    return { user: plainToClass(User, user), jwtToken };
   }
 }

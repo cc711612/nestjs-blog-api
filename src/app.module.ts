@@ -4,15 +4,19 @@ import { ArticleModule } from './article/article.module';
 import { CommentModule } from './comment/comment.module';
 import { Article } from './article/article.entity';
 import { Comment } from './comment/comment.entity';
-import { MemoryLoggerMiddleware } from './middleware/memory-logger.middleware';
 import { UsersModule } from './users/users.module';
 import * as dotenv from 'dotenv';
+import { JwtModule } from '@nestjs/jwt';
+import { configureMiddlewares } from './routes'; // 引用中間件配置文件
+import { GeneralOutputMiddleware } from './middleware/general-output.middleware'; // 引用通用輸出中間件
+
 
 dotenv.config();
 
 console.log('Database Host:', process.env.DB_HOST);
 console.log('Database Username:', process.env.DB_USERNAME);
 console.log('Database Name:', process.env.DB_DATABASE);
+console.log('JWT Secret:', process.env.JWT_SECRET);
 
 @Module({
   imports: [
@@ -30,12 +34,19 @@ console.log('Database Name:', process.env.DB_DATABASE);
     CommentModule,
     ArticleModule,
     UsersModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' },
+    }),
   ],
 })
+
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(MemoryLoggerMiddleware)
+      .apply(GeneralOutputMiddleware)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
+
+    configureMiddlewares(consumer); // 使用中間件配置
   }
 }
