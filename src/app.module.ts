@@ -34,19 +34,17 @@ console.log('JWT Secret:', process.env.JWT_SECRET);
     CommentModule,
     ArticleModule,
     UsersModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' },
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: process.env.JWT_SECRET,
+        signOptions: { expiresIn: '1h' },
+      }),
     }),
   ],
 })
 
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(GeneralOutputMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
-
     configureMiddlewares(consumer); // 使用中間件配置
   }
 }
