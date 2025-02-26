@@ -39,6 +39,24 @@ export class UsersController {
   // DELETE /users/:id
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<void> {
-    return this.usersService.remove(parseInt(id, 10));  // 將 id 轉換為 number
+    try {
+      return await this.usersService.remove(parseInt(id, 10));
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  @Put('restore/:id')
+  async restore(@Param('id') id: string): Promise<void> {
+    try{
+      return this.usersService.restore(parseInt(id, 10));
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  @Get('/getToken/:id')
+  async getToken(@Param('id') id: string): Promise<{ user: User, jwtToken: string }> {
+    return this.usersService.getToken(parseInt(id, 10));  // 將 id 轉換為 number
   }
 }

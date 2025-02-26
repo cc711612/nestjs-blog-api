@@ -1,11 +1,11 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm';
 import { Article } from 'src/article/article.entity';
-import { Comment } from 'src/comment/comment.entity'; // 確保正確導入 Comment 類型
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Comment } from 'src/comment/comment.entity';
 
-@Entity('users')  // 指定資料表名稱
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;  // 將 id 類型設置為 number
+  id: number;
 
   @Column({ unique: true })
   name: string;
@@ -19,11 +19,14 @@ export class User {
   @Column()
   images: string;
 
-  @CreateDateColumn({ name : 'created_at' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name : 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt?: Date;
 
   @OneToMany(() => Article, (article) => article.user)
   articles: Article[];
