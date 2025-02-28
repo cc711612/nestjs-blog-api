@@ -8,7 +8,6 @@ import { UsersModule } from './users/users.module';
 import * as dotenv from 'dotenv';
 import { JwtModule } from '@nestjs/jwt';
 import { configureMiddlewares } from './routes'; // 引用中間件配置文件
-import { GeneralOutputMiddleware } from './middleware/general-output.middleware'; // 引用通用輸出中間件
 
 
 dotenv.config();
